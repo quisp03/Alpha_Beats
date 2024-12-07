@@ -49,7 +49,7 @@ private IEnumerator ReadFromFile()
         Debug.LogError("Error loading MIDI file: " + www.error);
     }
     else
-    {
+    { //
         // Create a new MemoryStream over the received data
         MemoryStream midiStream = new MemoryStream(www.downloadHandler.data);
 
