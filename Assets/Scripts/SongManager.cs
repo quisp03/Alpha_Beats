@@ -1,11 +1,12 @@
 using System.Collections;
-using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.Networking; // Required for UnityWebRequest
 using Melanchall.DryWetMidi.Interaction;
 using Melanchall.DryWetMidi.Core;
 using System.Linq;
-//
+using UnityEngine.SceneManagement;
+
 public class SongManager : MonoBehaviour
 {
     public static SongManager Instance;
@@ -15,7 +16,7 @@ public class SongManager : MonoBehaviour
     public double marginOfError;
     public int inputDelayInMilliseconds;
 
-    public string fileLocation;
+    public string fileLocation; // Ensure this is just the file name located in StreamingAssets
     public float noteTime;
     public float noteSpawnY;
     public float noteTapY;
@@ -34,14 +35,36 @@ public class SongManager : MonoBehaviour
     private IEnumerator DelayedStart(float delay)
     {
         yield return new WaitForSeconds(delay);
-        ReadFromFile();
+        StartCoroutine(ReadFromFile());
     }
 
-    private void ReadFromFile()
+private IEnumerator ReadFromFile()
+{
+    string filePath = Path.Combine(Application.streamingAssetsPath, fileLocation);
+    UnityWebRequest www = UnityWebRequest.Get(filePath);
+    yield return www.SendWebRequest();
+
+    if (www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
     {
-        midiFile = MidiFile.Read(Application.streamingAssetsPath + "/" + fileLocation);
-        GetDataFromMidi();
+        Debug.LogError("Error loading MIDI file: " + www.error);
     }
+    else
+    {
+        // Create a new MemoryStream over the received data
+        MemoryStream midiStream = new MemoryStream(www.downloadHandler.data);
+
+        try
+        {
+            midiFile = MidiFile.Read(midiStream);
+            GetDataFromMidi();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Failed to read MIDI file: " + e.Message);
+        }
+    }
+}
+
 
     public void GetDataFromMidi()
     {
