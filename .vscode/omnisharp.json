@@ -1,0 +1,9 @@
+{
+  "msbuild": {
+    "useBundledOnly": false,
+    "useLegacySdkResolver": true
+  },
+  "SDK": {
+    "version": "6.0.428"
+  }
+}
